@@ -1,0 +1,7 @@
+FictoEspecialista:50
+Cirujano:100
+Orejologo:50
+Ojologo:80
+Currar:150
+Patologo:40
+Corazonologo:180

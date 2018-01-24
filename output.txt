@@ -1,0 +1,2106 @@
+﻿***********************************
+Filename: Especialidad.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Dominio
+{
+    [Serializable]
+    public class Especialidad
+    {
+        #region Atributos y Properties
+        //Atributos de Clase
+        // Autonumerado
+        private static int _UltimoNro = 0;
+        public static int UltimoNumero
+        {
+            get { return _UltimoNro; }
+        }
+        // Atributos de Instancia
+        public int IdEspecialidad { set; get; }
+        public string NombreEspecialidad { set; get; }
+        public double ValorHora { set; get; }
+        #endregion
+
+        #region Constructores
+        public Especialidad(string unNombreEspecialidad, double unValorHora)
+        {
+            _UltimoNro++;
+            this.IdEspecialidad = _UltimoNro;
+            this.NombreEspecialidad = unNombreEspecialidad;
+            this.ValorHora = unValorHora;
+        }
+        #endregion
+
+        #region Otros Metodos
+        #endregion
+    }
+}
+
+***********************************
+Filename: EspecialidadMedico.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Dominio
+{
+    [Serializable]
+    public class EspecialidadMedico
+    {
+        #region Atributos y Properties
+        public Especialidad Especialidad { set; get; }
+        public DateTime FechaRecibimiento { set; get; }
+        #endregion
+
+        #region Constructor
+        public EspecialidadMedico(Especialidad unaEspecialidad, DateTime unaFechaRecibimiento)
+        {
+            this.Especialidad = unaEspecialidad;
+            this.FechaRecibimiento = unaFechaRecibimiento;
+        }
+        #endregion
+    }
+}
+
+***********************************
+Filename: Especialista.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Dominio
+{
+    [Serializable]
+    public class Especialista:Medico
+    {
+        #region Atributos y Properties
+        public static double FictoEspecialista { set; get; } = 0;
+        public List<EspecialidadMedico> ListaEspecialidades { set; get; }
+        #endregion
+
+        #region Constructor
+        public Especialista(int unNumLicencia, string unNombreCompleto, string unaDireccion, string unTelefono, bool unEsExclusivo, Usuario unUsuario) : base(unNumLicencia, unNombreCompleto, unaDireccion, unTelefono, unEsExclusivo, unUsuario)
+        {
+            this.ListaEspecialidades = new List<EspecialidadMedico>();
+        }
+        #endregion
+
+        #region Otros Metodos
+        public override double CalcularSalario()
+        {
+            double retorno = 0;
+            double max = 0;
+            foreach (EspecialidadMedico tmpEspecialidadMedico in this.ListaEspecialidades)
+            {
+                if (tmpEspecialidadMedico.Especialidad.ValorHora > max) {
+                    max = tmpEspecialidadMedico.Especialidad.ValorHora;
+                    retorno = tmpEspecialidadMedico.Especialidad.ValorHora;
+                }
+            }
+
+            retorno *= this.HorasATrabajar;
+
+            if (this.ListaEspecialidades.Count > 3)
+            {
+                retorno += Especialista.FictoEspecialista;
+            }
+            this.Sueldo = "$ " + Convert.ToString(retorno); 
+            return retorno;
+        }
+        #endregion
+    }
+
+}
+
+***********************************
+Filename: General.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Dominio
+{
+    [Serializable]
+    public class General:Medico
+    {
+        #region Atributos y Properties
+        public static double ValorHora { set; get; } = 110;
+        public DateTime FechaRecibimiento { set; get; }
+        #endregion
+
+        #region Constructor
+        public General(DateTime unaFechaRecibimiento, int unNumLicencia, string unNombreCompleto, string unaDireccion, string unTelefono, bool unEsExclusivo, Usuario unUsuario) : base(unNumLicencia, unNombreCompleto, unaDireccion, unTelefono, unEsExclusivo, unUsuario)
+        {
+            this.FechaRecibimiento = unaFechaRecibimiento;
+        }
+        #endregion
+
+        #region Otros Metodos
+        public override double CalcularSalario()
+        {
+            double retorno = General.ValorHora * this.HorasATrabajar;
+            TimeSpan intervalo = DateTime.Now - this.FechaRecibimiento;
+            int horasEnCincoAnios =43800;
+            if (intervalo.Hours > horasEnCincoAnios)
+            {
+                retorno *= 1.10;
+            }
+            this.Sueldo = "$ " + Convert.ToString(retorno);
+            return retorno;
+        }
+        #endregion
+    }
+}
+
+***********************************
+Filename: Medico.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Dominio
+{
+    [Serializable]
+    public abstract class Medico:IComparable<Medico>
+    {
+        #region Atributos y Properties
+        public int NumLicencia { set; get; }
+        public string NombreCompleto { set; get; }
+        public string Direccion { set; get; }
+        public string Telefono { set; get; }
+        public bool EsExclusivo { set; get; }
+        public Usuario Usuario { set; get; }
+        public double HorasATrabajar { set; get; }
+        private string sueldo;
+        public string Sueldo
+        {
+            get
+            {
+                return "$ " + Convert.ToString(this.CalcularSalario());
+            }
+            set
+            {
+                sueldo = value;
+            }
+        }
+        #endregion
+
+        #region Constructor
+        public Medico(int unNumLicencia,string unNombreCompleto,string unaDireccion,string unTelefono,bool unEsExclusivo,Usuario unUsuario)
+        {
+            this.NumLicencia = unNumLicencia;
+            this.NombreCompleto = unNombreCompleto;
+            this.Direccion = unaDireccion;
+            this.Telefono = unTelefono;
+            this.EsExclusivo = unEsExclusivo;
+            this.Usuario = unUsuario;
+            this.HorasATrabajar = 100;
+        }
+        #endregion
+
+        #region Otros Metodos
+
+        public int CompareTo(Medico unMedico)
+        {
+            return this.CalcularSalario().CompareTo(unMedico.CalcularSalario());
+        } 
+
+        public abstract double CalcularSalario();
+
+        public void AgregarDetalleHistoriaClinica(Paciente unPaciente, string unDetalle)
+        {
+            unPaciente.HistoriaClinica.Add(unDetalle);
+        }
+
+
+        #endregion
+    }
+}
+
+***********************************
+Filename: Paciente.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Dominio
+{
+    [Serializable]
+    public class Paciente
+    {
+        #region Atributos y Properties
+        //Atributos de Clase
+        // Autonumerado
+        private static int _UltimoNro = 0;
+        public static int UltimoNumero
+        {
+            get { return _UltimoNro; }
+        }
+        // Atributos de Instancia
+        public int NumeroMatricula { set; get; }
+        public string NombreCompleto { set; get; }
+        public string Email { set; get; }
+        public string Telefono { set; get; }
+        public string Cedula { set; get; }
+        public Usuario Usuario { set; get; }
+        public List<string> HistoriaClinica { set; get; }
+        public List<Reserva> ListaReservasPaciente { set; get; }
+        #endregion
+
+        #region Constructores
+        public Paciente(string unNombreCompleto, string unEmail, string unTelefono, string unaCedula, Usuario unUsuario)
+        {
+            _UltimoNro++;
+            this.NumeroMatricula = _UltimoNro;
+            this.NombreCompleto = unNombreCompleto;
+            this.Email = unEmail;
+            this.Telefono = unTelefono;
+            this.Cedula = unaCedula;
+            this.Usuario = unUsuario;
+            this.ListaReservasPaciente = new List<Reserva>();
+            this.HistoriaClinica = new List<String>();
+        }
+        #endregion
+     
+    }
+}
+
+***********************************
+Filename: Reserva.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Dominio
+{
+    [Serializable]
+    public class Reserva
+    {
+        #region Atributos y Properties
+        //Atributos de Clase
+        // Autonumerado
+        private static int _UltimoNro = 0;
+        public static int UltimoNumero
+        {
+            get { return _UltimoNro; }
+        }
+        // Atributos de Instancia
+        public int IdReserva { set; get; }
+        public DateTime Fecha { set; get; }
+        public Medico Medico { set; get; }
+        public Paciente Paciente { set; get; }
+        public Especialidad Especialidad { set; get; }
+        public bool fueCancelada { set; get; }
+
+        public string FechaString
+        {
+            get { return Fecha.ToString("dd/MM/yyyy - hh:mm")+" hs"; }
+                
+        }
+
+        public string NombreMedicoString
+        {
+            get { return Medico.NombreCompleto; }
+
+        }
+
+        public string NombreEspecialidadString
+        {
+            get { return Especialidad.NombreEspecialidad; }
+
+        }
+        #endregion
+
+        #region Constructores
+        public Reserva(DateTime unaFecha, Medico unMedico, Paciente unPaciente, Especialidad unaEspecialidad)
+        {
+            _UltimoNro++;
+            this.IdReserva = _UltimoNro;
+            this.Fecha = unaFecha;
+            this.Medico = unMedico;
+            this.Paciente = unPaciente;
+            this.Especialidad = unaEspecialidad;
+            this.fueCancelada = false;
+        }
+        #endregion
+
+        #region Otros Metodos
+        #endregion
+    }
+}
+
+***********************************
+Filename: Sistema.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Dominio
+{
+    [Serializable]
+    public class Sistema
+    {
+        #region Atributos y Properties
+        public List<Usuario> ListaUsuarios { set; get; }
+        public List<Medico> ListaMedicos { set; get; }
+        public List<Paciente> ListaPacientes { set; get; }
+        public List<Especialidad> ListaEspecialidades { set; get; }
+        public List<Reserva> ListaReservas { set; get; }
+        private static Sistema instancia;
+        public static Sistema Instancia
+        {
+            get
+            {
+                if (instancia == null)
+                {
+                    if (File.Exists("D:/datos.dat"))
+                    {
+                        instancia = Deserializar();
+                    }
+                    else
+                    {
+                        instancia = new Sistema();
+                        Instancia.CargaDatosPrueba();
+                    }
+                    CargaValoresAtributosDeClase();
+                }
+                return instancia;
+            }
+        }
+        #endregion
+
+        #region Constructor
+        private Sistema()
+        {
+            this.ListaUsuarios = new List<Usuario>();
+            this.ListaMedicos = new List<Medico>();
+            this.ListaPacientes = new List<Paciente>();
+            this.ListaEspecialidades = new List<Especialidad>();
+            this.ListaReservas = new List<Reserva>();
+        }
+        #endregion
+
+        #region Busqueda y Validaciones de Objetos
+        public Medico BuscarMedico(int unNumeroLicencia)
+        {
+            Medico retorno = null;
+            foreach (Medico tmpMedico in ListaMedicos)
+            { //Recorro lista de Medicos y busco alguno con el Numero de Licencia ingresado por parametro
+                if (tmpMedico.NumLicencia == unNumeroLicencia)
+                {
+                    retorno = tmpMedico; //si encuentro uno lo guardo en la variable
+                }
+
+            }
+            return retorno; //devuelvo el objeto encontrado o en caso contrario null
+        }
+
+        public Reserva BuscarReservaPorId(int unId)
+        {
+            Reserva retorno = null;
+            foreach (Reserva tmpReserva in ListaReservas)
+            {//Recorro lista de Reservas y busco alguna con el id ingresado por parametro
+                if (tmpReserva.IdReserva == unId)
+                {
+                    retorno = tmpReserva;//si encuentro uno lo guardo en la variable
+                }
+
+            }
+            return retorno;//devuelvo el objeto encontrado o en caso contrario null
+        }
+
+        public bool YaExisteReserva(DateTime unaFecha, Medico unMedico)
+        {
+            bool retorno = false;
+            foreach (Reserva tmpReserva in ListaReservas)
+            {//Recorro lista de Reservas y busco alguna con la fecha y medico ingresados por parametro
+                if (tmpReserva.Medico.NumLicencia == unMedico.NumLicencia)
+                {
+                    int unaHoraMenos = tmpReserva.Fecha.Hour - 1;
+                    int unaHoraMas = tmpReserva.Fecha.Hour + 1;
+                    //valido que el medico no este ocupado una hora antes ni una hora despues(las consultas duran 1 hora) para evitar solapamientos, por ejemplo una consulta a las 15:00 y otra a las 15:20
+                    bool estaEnUnHorarioOcupado = unaFecha.Hour > unaHoraMenos && unaFecha.Hour < unaHoraMas;
+
+                    if (unaFecha.Date == tmpReserva.Fecha.Date && estaEnUnHorarioOcupado && !tmpReserva.fueCancelada) {
+                        retorno = true; //si la reserva existe devuelvo true
+                    }
+                }
+            }
+            return retorno;
+        }
+
+        public Paciente BuscarPaciente(string unaCedula)
+        {
+            Paciente retorno = null;
+            foreach (Paciente tmpPaciente in ListaPacientes)//recorro la lista de pacientes
+            {
+                if (tmpPaciente.Cedula == unaCedula)//si el paciente tiene la misma cedula a la ingresada por parametro
+                {
+                    retorno = tmpPaciente; //guardo el objeto
+                }
+            }
+            return retorno;
+        }
+
+        public Usuario ValidarUsuario(string unNombreUsuario,string unPassword)
+        {
+            Usuario retorno = null;
+            foreach (Usuario tmpUsuario in ListaUsuarios)//recorro la lista de usuarios
+            {
+                if (tmpUsuario.NombreUsuario == unNombreUsuario && tmpUsuario.contrasena == unPassword)//si el usuario tiene mismo nombre y pass a los ingresados por parametro
+                {
+                    retorno = tmpUsuario; //guardo el objeto
+                }
+            }
+            return retorno;
+        }
+
+        public Especialidad BuscarEspecialidad(int unId)
+        {
+            Especialidad retorno = null;
+            foreach (Especialidad tmpEspecialidad in ListaEspecialidades)//recorro la lista de especialidades
+            {
+                if (tmpEspecialidad.IdEspecialidad == unId)//si la especilaidad tiene el mismo id al ingresado por parametro
+                {
+                    retorno = tmpEspecialidad;//guardo el objeto
+                }
+            }
+            return retorno;
+        }
+
+        public Usuario BuscarUsuario(string unNombreUsuario)
+        {
+            Usuario retorno = null;
+            foreach (Usuario tmpUsuario in ListaUsuarios)//recorro la lista de usuarios
+            {
+                if (tmpUsuario.NombreUsuario == unNombreUsuario)//si el usuario tiene el mismo nombre al ingresado por parametro
+                {
+                    retorno = tmpUsuario;//guardo el objeto
+                }
+            }
+            return retorno;
+        }
+
+        public Paciente BuscarPacientePorUsuario(Usuario unUsuario)
+        {
+            Paciente retorno = null;
+            foreach (Paciente p in ListaPacientes)//recorro la lista de pacientes
+            {
+                if(p.Usuario.NombreUsuario == unUsuario.NombreUsuario)//si el nombre de usuario del paciente es igual al nombre de usuario del objeto usuario ingresado por parametro
+                {
+                    retorno = p;//guardo el objeto
+                }
+            }
+            return retorno;
+        }
+
+        public Medico BuscarMedicoPorUsuario(Usuario unUsuario)
+        {
+            Medico retorno = null;
+            foreach (Medico m in ListaMedicos)//recorro la lista de medicos
+            {
+                if (m.Usuario.NombreUsuario == unUsuario.NombreUsuario)//si el nombre de usuario del medico es igual al nombre de usuario del objeto usuario ingresado por parametro
+                {
+                    retorno = m;//guardo el objeto
+                }
+            }
+            return retorno;
+        }
+        #endregion
+
+        #region Altas y Bajas de objetos
+        public void AltaEspecialidadMedico(Especialidad unaEspecialidad, DateTime unaFechaRecibimiento,Especialista unEspecialista)
+        {
+            EspecialidadMedico tmpEspecialidadMedico = new EspecialidadMedico(unaEspecialidad, unaFechaRecibimiento);
+            unEspecialista.ListaEspecialidades.Add(tmpEspecialidadMedico);
+            Serializar();
+        }
+        
+        public void AltaEspecialidad(string unNombreEspecialidad, double unValorHora)
+        {
+            Especialidad tmpEspecialidad = new Especialidad(unNombreEspecialidad, unValorHora);
+            ListaEspecialidades.Add(tmpEspecialidad);
+            Serializar();
+        }
+
+        public bool AltaPaciente(string unNombreCompleto, string unEmail, string unTelefono, string unaCedula, Usuario unUsuario)
+        {
+            bool retorno = false;
+            if (this.BuscarPaciente(unaCedula) == null)
+            { //Compruebo que no exista ningun Paciente con la cedula ingresada por parametro
+                Paciente tmpPaciente = new Paciente(unNombreCompleto, unEmail, unTelefono, unaCedula, unUsuario);
+                ListaPacientes.Add(tmpPaciente);
+                retorno = true;
+                Serializar();
+            }
+            return retorno;
+        }
+
+        public bool AltaMedicoGeneral(DateTime unaFechaRecibimiento, int unNumLicencia, string unNombreCompleto, string unaDireccion, string unTelefono, bool unEsExclusivo, Usuario unUsuario)
+        {
+            bool retorno = false;
+            if (this.BuscarMedico(unNumLicencia) == null)
+            { //Compruebo que no exista ningun Medico con ese numero de licencia
+                Medico tmpMedico = new General(unaFechaRecibimiento, unNumLicencia, unNombreCompleto, unaDireccion, unTelefono, unEsExclusivo,unUsuario);
+                ListaMedicos.Add(tmpMedico);
+                retorno = true;
+                Serializar();
+            }
+            return retorno;
+        }
+
+        public bool AltaMedicoEspecialista(int unNumLicencia, string unNombreCompleto, string unaDireccion, string unTelefono, bool unEsExclusivo, Usuario unUsuario)
+        {
+            bool retorno = false;
+            if (this.BuscarMedico(unNumLicencia) == null)
+            { //Compruebo que no exista ningun Medico con ese numero de licencia
+                Medico tmpMedico = new Especialista(unNumLicencia, unNombreCompleto, unaDireccion, unTelefono, unEsExclusivo, unUsuario);
+                ListaMedicos.Add(tmpMedico);
+                retorno = true;
+                Serializar();
+            }
+
+            return retorno;
+        }
+
+        public bool AltaReservaEspecialista(DateTime unaFecha, Medico unMedico, Paciente unPaciente, Especialidad unaEspecialidad)
+        {
+            bool retorno = false;
+            if (!this.YaExisteReserva(unaFecha,unMedico) && unaFecha > DateTime.Now)
+            { //Compruebo que no exista ningun Medico con ese numero de licencia
+                Reserva tmpReserva = new Reserva(unaFecha, unMedico,unPaciente,unaEspecialidad);
+                ListaReservas.Add(tmpReserva);
+                unPaciente.ListaReservasPaciente.Add(tmpReserva);
+                retorno = true;
+                Serializar();
+            }
+
+            return retorno;
+        }
+
+        public bool AltaReservaGeneral(DateTime unaFecha, Medico unMedico, Paciente unPaciente)
+        {
+            bool retorno = false;
+            if (!this.YaExisteReserva(unaFecha, unMedico) && unaFecha > DateTime.Now)
+            { //Compruebo que no exista ningun Medico con ese numero de licencia
+                Especialidad tmpEspecialidad = new Especialidad("N/A",1);
+                Reserva tmpReserva = new Reserva(unaFecha, unMedico, unPaciente, tmpEspecialidad);
+                ListaReservas.Add(tmpReserva);
+                unPaciente.ListaReservasPaciente.Add(tmpReserva);
+                retorno = true;
+                Serializar();
+            }
+
+            return retorno;
+        }
+
+        public bool BajaReserva(Reserva unaReserva)
+        {
+            bool retorno = true;
+            if (unaReserva.Fecha < DateTime.Now) //Si la fecha de la reserva es menor a la del dia actual no se puede dar de baja la reserva
+            {
+                retorno = false;
+            }
+            else
+            {
+                unaReserva.fueCancelada = true;
+                Serializar();
+            }
+            return retorno;
+        }
+        #endregion
+
+        #region Otros Metodos
+
+        public void CargaDatosPrueba() //Datos de prueba para testeo
+        {
+            //Usuarios para Medicos
+            Usuario medico = new Usuario(Usuario.EnumRol.Medico, "med", "123");
+            Usuario medico2 = new Usuario(Usuario.EnumRol.Medico, "med2", "123");
+            Usuario medico3 = new Usuario(Usuario.EnumRol.Medico, "med3", "123");
+            Usuario medico4 = new Usuario(Usuario.EnumRol.Medico, "med4", "123");
+            Usuario medico5 = new Usuario(Usuario.EnumRol.Medico, "med5", "123");
+            Usuario medico6 = new Usuario(Usuario.EnumRol.Medico, "med5", "123");
+            //Medico General
+            AltaMedicoGeneral(DateTime.Now, 1, "Carlos General", "Yaguaron 1414", "099999", false, medico);
+            AltaMedicoGeneral(DateTime.Now, 2, "Martin General", "Republica 1211", "099459", true, medico2);
+            AltaMedicoGeneral(DateTime.Now, 3, "Alberto General", "Miguelete 3214", "0996579", false, medico3);
+            //Medico Especialista
+            AltaMedicoEspecialista(4, "Roberto Especialista", "Paysandu 1828", "099123", false, medico4);
+            AltaMedicoEspecialista(5, "Juan Especialista", "Colonia 1165", "099923", true, medico5);
+            AltaMedicoEspecialista(6, "Pedro Especialista", "Mercedes 1256", "099874", true, medico6);
+            ListaUsuarios.Add(medico);
+            ListaUsuarios.Add(medico2);
+            ListaUsuarios.Add(medico3);
+            ListaUsuarios.Add(medico4);
+            ListaUsuarios.Add(medico5);
+            ListaUsuarios.Add(medico6);
+            //Usuario administrador
+            Usuario administrador = new Usuario(Usuario.EnumRol.Administrador, "admin", "123");
+            ListaUsuarios.Add(administrador);
+            //Usuarios para Paciente
+            Usuario paciente = new Usuario(Usuario.EnumRol.Paciente, "pac", "123");
+            Usuario paciente2 = new Usuario(Usuario.EnumRol.Paciente, "pac2", "123");
+            Usuario paciente3 = new Usuario(Usuario.EnumRol.Paciente, "pac3", "123");
+            Usuario paciente4 = new Usuario(Usuario.EnumRol.Paciente, "pac4", "123");
+            Usuario paciente5 = new Usuario(Usuario.EnumRol.Paciente, "pac5", "123");
+            Usuario paciente6 = new Usuario(Usuario.EnumRol.Paciente, "pac6", "123");
+            ListaUsuarios.Add(paciente);
+            ListaUsuarios.Add(paciente2);
+            ListaUsuarios.Add(paciente3);
+            ListaUsuarios.Add(paciente4);
+            ListaUsuarios.Add(paciente5);
+            ListaUsuarios.Add(paciente6);
+            //Paciente
+            AltaPaciente("Franco Paciente", "franco@gmail.com", "099654", "12345", paciente);
+            AltaPaciente("Ricardo Paciente", "riky@hotmail.com", "099124", "54321", paciente2);
+            AltaPaciente("Pedro Paciente", "pedrito@gmail.com", "099098", "56789", paciente3);
+            AltaPaciente("Alberto Paciente", "beto@gmail.com", "099987", "98765", paciente4);
+            AltaPaciente("Gloria Paciente", "gloria@gmail.com", "098754", "32164", paciente5);
+            AltaPaciente("Chingolo Paciente", "chingolo@gmail.com", "099592", "76234", paciente6);
+            //Especialidad
+            AltaEspecialidad("Cirujano",100);
+            AltaEspecialidad("Orejologo", 50);
+            AltaEspecialidad("Ojologo", 80);
+            AltaEspecialidad("Currar", 150);
+            AltaEspecialidad("Patologo", 40);
+            AltaEspecialidad("Corazonologo", 180);
+            //Reservas
+            AltaReservaEspecialista(DateTime.Now.AddMonths(5),ListaMedicos[3],ListaPacientes[0],ListaEspecialidades[0]);
+            AltaReservaEspecialista(DateTime.Now.AddMonths(6), ListaMedicos[3], ListaPacientes[0], ListaEspecialidades[0]);
+            AltaReservaEspecialista(DateTime.Now.AddMonths(8), ListaMedicos[4], ListaPacientes[1], ListaEspecialidades[1]);
+            AltaReservaEspecialista(DateTime.Now.AddMonths(10), ListaMedicos[5], ListaPacientes[2], ListaEspecialidades[2]);
+            AltaReservaGeneral(DateTime.Now.AddMonths(1), ListaMedicos[0], ListaPacientes[3]);
+            AltaReservaGeneral(DateTime.Now.AddDays(2), ListaMedicos[1], ListaPacientes[4]);
+            AltaReservaGeneral(DateTime.Now.AddDays(56), ListaMedicos[2], ListaPacientes[5]);
+            //EspecialidadMedico
+            DateTime fecha = new DateTime(2015, 8, 12);
+            DateTime fecha2 = new DateTime(2012, 12, 4);
+            DateTime fecha3 = new DateTime(2011, 2, 5);
+            DateTime fecha4 = new DateTime(2016, 8, 24);
+            DateTime fecha5 = new DateTime(2010, 2, 15);
+            DateTime fecha6 = new DateTime(2003, 7, 19);
+
+            AltaEspecialidadMedico(ListaEspecialidades[0],fecha,(Especialista)ListaMedicos[3]);
+            AltaEspecialidadMedico(ListaEspecialidades[1], fecha2, (Especialista)ListaMedicos[3]);
+            AltaEspecialidadMedico(ListaEspecialidades[2], fecha3, (Especialista)ListaMedicos[3]);
+            AltaEspecialidadMedico(ListaEspecialidades[3], fecha4, (Especialista)ListaMedicos[3]);
+
+            AltaEspecialidadMedico(ListaEspecialidades[3], fecha, (Especialista)ListaMedicos[4]);
+            AltaEspecialidadMedico(ListaEspecialidades[4], fecha5, (Especialista)ListaMedicos[4]);
+            AltaEspecialidadMedico(ListaEspecialidades[5], fecha4, (Especialista)ListaMedicos[4]);
+            AltaEspecialidadMedico(ListaEspecialidades[2], fecha2, (Especialista)ListaMedicos[4]);
+
+            AltaEspecialidadMedico(ListaEspecialidades[3], fecha3, (Especialista)ListaMedicos[5]);
+            AltaEspecialidadMedico(ListaEspecialidades[5], fecha2, (Especialista)ListaMedicos[5]);
+            AltaEspecialidadMedico(ListaEspecialidades[0], fecha, (Especialista)ListaMedicos[5]);
+            AltaEspecialidadMedico(ListaEspecialidades[1], fecha6, (Especialista)ListaMedicos[5]);
+
+            //Historias Clinicas Pacientes
+            ListaMedicos[0].AgregarDetalleHistoriaClinica(ListaPacientes[0],"Una historia de clinica como nunca antes vista");
+            ListaMedicos[0].AgregarDetalleHistoriaClinica(ListaPacientes[0], "Caso extraordinario de resfrio agudo");
+            ListaMedicos[0].AgregarDetalleHistoriaClinica(ListaPacientes[0], "Dolor de cabeza inexplicable");
+            ListaMedicos[0].AgregarDetalleHistoriaClinica(ListaPacientes[0], "Golpe severo del dedo chiquito del pie derecho contra la cama");
+        }
+
+        public List<Reserva> DevolverListaReservasMedico(int unNumLicencia)
+        {
+            List<Reserva> listaReservasMedicos = new List<Reserva>();
+            foreach (Reserva tmpReserva in ListaReservas)
+            {
+                if (tmpReserva.Medico.NumLicencia == unNumLicencia) // si el numero de licencia ingresado por parametros es igual al del medico de la reserva la agrego a la lista para devolver
+                {
+                    listaReservasMedicos.Add(tmpReserva);
+                }
+            }
+            return listaReservasMedicos;
+        }
+
+        public List<Reserva> DevolverListaReservasPaciente(int unNumeroMatricula)
+        {
+            List<Reserva> listaReservasPaciente = new List<Reserva>();
+            foreach (Reserva tmpReserva in ListaReservas)
+            {
+                if (tmpReserva.Paciente.NumeroMatricula == unNumeroMatricula) // si el numero de licencia ingresado por parametros es igual al del medico de la reserva la agrego a la lista para devolver
+                {
+                    listaReservasPaciente.Add(tmpReserva);
+                }
+            }
+            return listaReservasPaciente;
+        }
+
+        public List<Reserva> DevolverListaReservasPacienteSinCancelar(int unNumeroMatricula)
+        {
+            List<Reserva> listaReservasPaciente = new List<Reserva>();
+            foreach (Reserva tmpReserva in ListaReservas)
+            {
+                if (tmpReserva.Paciente.NumeroMatricula == unNumeroMatricula && !tmpReserva.fueCancelada) // si el numero de licencia ingresado por parametros es igual al del medico de la reserva la agrego a la lista para devolver
+                {
+                    listaReservasPaciente.Add(tmpReserva);
+                }
+            }
+            return listaReservasPaciente;
+        }
+
+        public bool StringEsSoloNumeros(string unString)
+        {
+            foreach (char c in unString)
+            {
+                if (c < '0' || c > '9')
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public List<Medico> MedicosOrdenadosPorSueldo()
+        {
+            ListaMedicos.Sort();//ordeno por sueldo
+            ListaMedicos.Reverse();//invierto el orden para obtener el orden descendente
+            return ListaMedicos;
+        }
+
+        public List<Paciente> DevolverPacientesMedicoPorFecha(Medico unMedico,DateTime unaFecha)
+        {
+            List<Paciente> retorno = new List<Paciente>();
+            foreach (Reserva tmpReserva in ListaReservas)//recorro la lista de reservas
+            {
+                if (tmpReserva.Medico.NumLicencia == unMedico.NumLicencia && !retorno.Contains(tmpReserva.Paciente)) //si el medico en la reserva es el mismo ingresado por parametro y el paciente no se encuentra en la lista
+                {
+                    if (tmpReserva.Fecha.Date == unaFecha.Date)
+                    {
+                        retorno.Add(tmpReserva.Paciente); //agrego el paciente a la lista a retornar
+                    }
+                }
+            }
+            return retorno;
+        }
+
+        public List<Paciente> PacientesConMasCancelaciones()
+        {
+            List<Paciente> retorno = new List<Paciente>();
+            int maxCancelacion = 0;
+            
+            foreach (Paciente tmpPaciente in ListaPacientes)//recorro lista de Pacientes
+            {
+                int contador = 0;
+                foreach (Reserva tmpReserva in tmpPaciente.ListaReservasPaciente)//recorro lista de reservas de cada Paciente
+                {
+                    if (tmpReserva.fueCancelada)//si la reserva fue cancelada sumo 1 al contador
+                    {
+                        contador++;
+                    }
+                }
+                if (contador > maxCancelacion)//si el contador es mayor a la cantidad de reservas canceladas
+                {
+                    maxCancelacion = contador; 
+                    retorno.Clear(); //limpio la lista
+                    retorno.Add(tmpPaciente); //agrego al paciente con la cantidad maxima de cancelaciones a la lista para devolver
+                }
+                else if (contador == maxCancelacion && maxCancelacion != 0) // si el paciente tiene la misma cantidad de cancelaciones que el valor maximo y el mismo no es 0 (estado incial de la variable)
+                {
+                    retorno.Add(tmpPaciente); //agrego el paciente a la lista para devolver
+                }
+            }
+            return retorno;
+        }
+
+        public List<string> DevolverHistoriaClinicaPaciente(Paciente unPaciente)
+        {
+            return unPaciente.HistoriaClinica;
+        } 
+
+        public List<Reserva> ListaReservasPacienteGeneral(Paciente unPaciente)
+        {
+            List<Reserva> retorno = new List<Reserva>();
+            foreach (Reserva tmpReserva in unPaciente.ListaReservasPaciente)//recorro la lista de reservas
+            {
+                if (tmpReserva.Medico is General)//si el medico de la reserva es de tipo general
+                {
+                    retorno.Add(tmpReserva);//agrego la reserva a la lista
+                }
+            }
+            return retorno;
+        }
+
+        public List<Reserva> ListaReservasPacientePorEspecialidad(Paciente unPaciente, Especialidad unaEspecialidad)
+        {
+            List<Reserva> retorno = new List<Reserva>();
+            foreach (Reserva tmpReserva in unPaciente.ListaReservasPaciente)//recorro la lista de reservas del paciente
+            {
+                if (tmpReserva.Especialidad.IdEspecialidad == unaEspecialidad.IdEspecialidad)//si la reserva tiene la misma especialidad a la ingresada por parametro
+                {
+                    retorno.Add(tmpReserva); //agrego la reserva a la lista
+                }
+            }
+            
+            return retorno;
+        }
+
+        public List<Reserva> ListaReservasPacientePorFecha(Paciente unPaciente, DateTime unaFecha)
+        {
+            List<Reserva> retorno = new List<Reserva>();
+            foreach (Reserva tmpReserva in unPaciente.ListaReservasPaciente)//recorro la lista de reservas del paciente ingresado por parametro
+            {
+                if (tmpReserva.Fecha.Date == unaFecha.Date)//si la reserva tiene la misma fecha a la ingresada por parametro
+                {
+                    retorno.Add(tmpReserva);//agrego la reserva a la lista
+                }
+            }
+
+            return retorno;
+        }
+
+        public List<Medico> DevolverListaMedicosGeneralesDisponibles(DateTime unaFecha)
+        {
+            List<Medico> retorno = new List<Medico>();
+            foreach (Medico tmpMedico in ListaMedicos)
+            {
+                if (!this.YaExisteReserva(unaFecha, tmpMedico) && tmpMedico is General) // si el medico esta disponible en esa fecha y hora lo agrego a la lista
+                {
+                    retorno.Add(tmpMedico);
+                }
+            }
+            return retorno;
+        }
+
+        public List<Medico> DevolverListMedicosEspecialistaDisponibles(DateTime unaFecha,Especialidad unaEspecialidad)
+        {
+            List<Medico> retorno = new List<Medico>();
+            foreach (Medico tmpMedico in ListaMedicos)//recorro la lista de medicos
+            {
+                if (tmpMedico is Especialista)//si el medico es de tipo especialista
+                {
+                    Especialista auxEspecialista = (Especialista)tmpMedico;
+                    foreach (EspecialidadMedico tmpEspecialidadMedico in auxEspecialista.ListaEspecialidades)//recorro lista de espcialidades del medico
+                    {
+                        if (!this.YaExisteReserva(unaFecha, auxEspecialista) && tmpEspecialidadMedico.Especialidad.IdEspecialidad == unaEspecialidad.IdEspecialidad) // si el medico esta disponible en esa fecha y hora lo agrego a la lista
+                        {
+                            retorno.Add(tmpMedico); //lo agrego a la lista
+                        }
+                    }
+                }
+            }
+
+            return retorno; 
+        }
+
+        private static void Serializar()
+        {
+            FileStream fs = new FileStream(AppDomain.CurrentDomain.BaseDirectory+"datos.dat", FileMode.Create);
+            BinaryFormatter bf = new BinaryFormatter();
+            bf.Serialize(fs, instancia);
+            fs.Close();
+        }
+
+        private static Sistema Deserializar()
+        {
+            FileStream fs = new FileStream(AppDomain.CurrentDomain.BaseDirectory + "datos.dat", FileMode.Open);
+            BinaryFormatter bf = new BinaryFormatter();
+            Sistema inst = bf.Deserialize(fs) as Sistema;
+            fs.Close();
+            return inst;
+        }
+
+        private static void CargaValoresAtributosDeClase()
+        {
+            StreamReader sr = null;
+            try
+            {
+                sr = File.OpenText(AppDomain.CurrentDomain.BaseDirectory + "parametros.txt");
+            }
+            catch (Exception)
+            {
+                //Console.WriteLine("UPS!");
+            }
+            if (sr != null)
+            {
+                bool quedanLineas = true;
+                while (quedanLineas)
+                {
+                    string linea = sr.ReadLine();
+                    if (linea == null)
+                    {
+                        quedanLineas = false;
+                    }
+                    else
+                    {
+                        string[] claveValor = linea.Split(':');
+                        string clave = claveValor[0];
+                        double valor = double.Parse(claveValor[1]);
+                        if (clave == "ficto")
+                        {
+                            Especialista.FictoEspecialista = valor;
+                        }
+                        else
+                        {
+                            foreach (Especialidad esp in Sistema.instancia.ListaEspecialidades)
+                            {
+                                if (esp.NombreEspecialidad == clave)
+                                {
+                                    esp.ValorHora = valor;
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+        #endregion
+    }
+}
+
+***********************************
+Filename: Usuario.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Dominio
+{
+    [Serializable]
+    public class Usuario
+    {
+        #region Atributos y Properties
+
+        public enum EnumRol { Administrador, Medico, Paciente }
+        public string NombreUsuario { set; get; }
+        public string contrasena { set; get; }
+        public EnumRol Rol { set; get; }
+        #endregion
+
+        #region Constructor
+        public Usuario(EnumRol unRol, string unNombreUsuario, string unaContrasena)
+        {
+            this.Rol = unRol;
+            this.NombreUsuario = unNombreUsuario;
+            this.contrasena = unaContrasena;
+        }
+        #endregion
+
+        #region Otros Metodos
+
+        #endregion
+    }
+}
+
+***********************************
+Filename: Alta_Reserva_Paciente.aspx
+***********************************
+<%@ Page Title="" Language="C#" MasterPageFile="~/Master.Master" AutoEventWireup="true" CodeBehind="Alta_Reserva_Paciente.aspx.cs" Inherits="Interfaz.Alta_Reserva_Paciente" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <br />
+    Realizar reserva de consulta médica<br />
+<br />
+Tipo de Médico:
+<br />
+<br />
+<asp:RadioButton ID="rdbAltaReservaGeneral" runat="server" Checked="True" GroupName="rdbAltaReserva" Text="General" AutoPostBack="True" />
+&nbsp;
+<asp:RadioButton ID="rdbAltaReservaEspecialista" runat="server" GroupName="rdbAltaReserva" Text="Especialista" AutoPostBack="True" />
+<br />
+<br />
+Seleccione una Fecha:<br />
+    <br />
+<asp:Calendar ID="calAltaReserva" runat="server" BackColor="White" BorderColor="White" BorderWidth="1px" Font-Names="Verdana" Font-Size="9pt" ForeColor="Black" Height="190px" NextPrevFormat="FullMonth" Width="350px" OnSelectionChanged="calAltaReserva_SelectionChanged">
+    <DayHeaderStyle Font-Bold="True" Font-Size="8pt" />
+    <NextPrevStyle Font-Bold="True" Font-Size="8pt" ForeColor="#333333" VerticalAlign="Bottom" />
+    <OtherMonthDayStyle ForeColor="#999999" />
+    <SelectedDayStyle BackColor="#333399" ForeColor="White" />
+    <TitleStyle BackColor="White" BorderColor="Black" BorderWidth="4px" Font-Bold="True" Font-Size="12pt" ForeColor="#333399" />
+    <TodayDayStyle BackColor="#CCCCCC" />
+</asp:Calendar>
+<br />
+Seleccione la hora de la consulta:
+<br />
+<br />
+<asp:DropDownList ID="ddlAltaReservaHorarios" runat="server" OnSelectedIndexChanged="ddlAltaReservaHorarios_SelectedIndexChanged" AutoPostBack="True">
+    <asp:ListItem Value="8" Selected="True">08:00</asp:ListItem>
+    <asp:ListItem Value="9">09:00</asp:ListItem>
+    <asp:ListItem Value="10">10:00</asp:ListItem>
+    <asp:ListItem Value="11">11:00</asp:ListItem>
+    <asp:ListItem Value="12">12:00</asp:ListItem>
+    <asp:ListItem Value="13">13:00</asp:ListItem>
+    <asp:ListItem Value="14">14:00</asp:ListItem>
+    <asp:ListItem Value="15">15:00</asp:ListItem>
+    <asp:ListItem Value="16">16:00</asp:ListItem>
+    <asp:ListItem Value="17">17:00</asp:ListItem>
+    <asp:ListItem Value="18">18:00</asp:ListItem>
+    <asp:ListItem Value="19">19:00</asp:ListItem>
+    <asp:ListItem Value="20">20:00</asp:ListItem>
+</asp:DropDownList>
+<br />
+<br />
+<asp:Panel ID="pnlAltaReservaGeneral" runat="server" Visible="False">
+    <br />
+    Listado de Medicos Generales disponibles:
+    <br />
+    <br />
+    <asp:GridView ID="grdAltaReservaGeneral" runat="server" CellPadding="4" ForeColor="#333333" GridLines="None" AutoGenerateColumns="False" EmptyDataText="No existen Datos para mostrar" ShowHeaderWhenEmpty="True">
+        <AlternatingRowStyle BackColor="White" ForeColor="#284775" />
+        <Columns>
+            <asp:CommandField ButtonType="Button" SelectText="Seleccionar" ShowSelectButton="True" />
+            <asp:BoundField DataField="NumLicencia" HeaderText="Numero Licencia" />
+            <asp:BoundField DataField="NombreCompleto" HeaderText="Nombre" />
+            <asp:BoundField DataField="Telefono" HeaderText="Telefono" />
+            <asp:BoundField DataField="Direccion" HeaderText="Direccion" />
+        </Columns>
+        <EditRowStyle BackColor="#999999" />
+        <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+        <HeaderStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+        <PagerStyle BackColor="#284775" ForeColor="White" HorizontalAlign="Center" />
+        <RowStyle BackColor="#F7F6F3" ForeColor="#333333" />
+        <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333" />
+        <SortedAscendingCellStyle BackColor="#E9E7E2" />
+        <SortedAscendingHeaderStyle BackColor="#506C8C" />
+        <SortedDescendingCellStyle BackColor="#FFFDF8" />
+        <SortedDescendingHeaderStyle BackColor="#6F8DAE" />
+    </asp:GridView>
+    <br />
+    <br />
+    <asp:Button ID="btnAltaReservaGeneral" runat="server" OnClick="btnAltaReservaGeneral_Click" Text="Alta Reserva" />
+    <br />
+    <br />
+    <asp:Label ID="lblAltaReservaGeneral" runat="server"></asp:Label>
+    <br />
+    <br />
+</asp:Panel>
+<br />
+<asp:Panel ID="pnlAltaReservaEspecialista" runat="server" Visible="False">
+    Seleccione una Especialidad:
+    <br />
+    <br />
+    <asp:DropDownList ID="ddlAltaReservaEspecialista" runat="server" AutoPostBack="True">
+    </asp:DropDownList>
+    <br />
+    <br />
+    Listado de Medicos Especialistas disponibles:
+    <br />
+    <br />
+    <asp:GridView ID="grdAltaReservaEspecialista" runat="server" CellPadding="4" ForeColor="Red" GridLines="None" AutoGenerateColumns="False" EmptyDataText="No se encontraron médicos disponibles para la fecha seleccionada">
+        <AlternatingRowStyle BackColor="White" ForeColor="#284775" />
+        <Columns>
+            <asp:CommandField ButtonType="Button" SelectText="Seleccionar" ShowSelectButton="True" />
+            <asp:BoundField DataField="NumLicencia" HeaderText="Numero Licencia" />
+            <asp:BoundField DataField="NombreCompleto" HeaderText="Nombre" />
+            <asp:BoundField DataField="Telefono" HeaderText="Telefono" />
+            <asp:BoundField DataField="Direccion" HeaderText="Direccion" />
+        </Columns>
+        <EditRowStyle BackColor="#999999" />
+        <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+        <HeaderStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+        <PagerStyle BackColor="#284775" ForeColor="White" HorizontalAlign="Center" />
+        <RowStyle BackColor="#F7F6F3" ForeColor="#333333" />
+        <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333" />
+        <SortedAscendingCellStyle BackColor="#E9E7E2" />
+        <SortedAscendingHeaderStyle BackColor="#506C8C" />
+        <SortedDescendingCellStyle BackColor="#FFFDF8" />
+        <SortedDescendingHeaderStyle BackColor="#6F8DAE" />
+    </asp:GridView>
+    <br />
+    <br />
+    <asp:Button ID="btnAltaReservaEspecialista" runat="server" OnClick="btnAltaReservaEspecialista_Click" Text="Alta Reserva" />
+    <br />
+    <br />
+    <asp:Label ID="lblAltaReservaEspecialista" runat="server"></asp:Label>
+    <br />
+</asp:Panel>
+<br />
+<br />
+&nbsp;
+</asp:Content>
+
+***********************************
+Filename: Alta_Reserva_Paciente.aspx.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Dominio;
+
+namespace Interfaz
+{
+    public partial class Alta_Reserva_Paciente : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["tipo"].ToString() != "2")//Si el tipo de usuario loggeado es distinto a 2(Paciente) es redirigido al login
+            {
+                Response.Redirect("Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                ddlAltaReservaEspecialista.DataSource = Sistema.Instancia.ListaEspecialidades;
+                ddlAltaReservaEspecialista.DataTextField = "NombreEspecialidad";
+                ddlAltaReservaEspecialista.DataValueField = "IdEspecialidad";
+                ddlAltaReservaEspecialista.DataBind();
+                calAltaReserva.SelectedDate = DateTime.Now.Date;
+            }
+            ActualizarGridMedicoGeneral();
+            ActualizarGridMedicoEspecialista();
+            
+            
+            if (rdbAltaReservaGeneral.Checked)
+            {
+                pnlAltaReservaGeneral.Visible = true;
+                pnlAltaReservaEspecialista.Visible = false;
+            }
+            if (rdbAltaReservaEspecialista.Checked)
+            {
+                pnlAltaReservaGeneral.Visible = false;
+                pnlAltaReservaEspecialista.Visible = true;
+            }
+            lblAltaReservaGeneral.Text = "";
+            lblAltaReservaEspecialista.Text = "";
+        }
+
+        protected DateTime ObtenerFechaConsulta()
+        {
+            int hora = Convert.ToInt32(ddlAltaReservaHorarios.SelectedValue); //tomo el valor de la hora seleccionada del dropdownlist
+            DateTime fechaCalendario = calAltaReserva.SelectedDate; //tomo la fecha seleccionada del calendario
+            DateTime fecha = new DateTime(fechaCalendario.Year, fechaCalendario.Month, fechaCalendario.Day, hora, 0, 0); //formo un DateTime con los datos
+            return fecha;
+        }
+        protected void ActualizarGridMedicoGeneral()
+        {
+            grdAltaReservaGeneral.DataSource = Sistema.Instancia.DevolverListaMedicosGeneralesDisponibles(ObtenerFechaConsulta());
+            grdAltaReservaGeneral.DataBind();
+        }
+        protected void ActualizarGridMedicoEspecialista()
+        {
+
+            int idEspecialidad = Convert.ToInt32(ddlAltaReservaEspecialista.SelectedValue);
+            Especialidad tmpEspecialidad = Sistema.Instancia.BuscarEspecialidad(idEspecialidad);
+            grdAltaReservaEspecialista.DataSource = Sistema.Instancia.DevolverListMedicosEspecialistaDisponibles(ObtenerFechaConsulta(), tmpEspecialidad);
+            grdAltaReservaEspecialista.DataBind();
+
+        }
+
+        protected void ddlAltaReservaHorarios_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ActualizarGridMedicoGeneral();
+            ActualizarGridMedicoEspecialista();
+        }
+
+        protected void calAltaReserva_SelectionChanged(object sender, EventArgs e)
+        {
+            ActualizarGridMedicoGeneral();
+            ActualizarGridMedicoEspecialista();
+        }
+        protected void btnAltaReservaGeneral_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (grdAltaReservaGeneral.SelectedRow != null)
+                {
+
+                    string nombreUsuario = (string)Session["usuario"]; //obtengo el nombre del usuario logueado en el sistema
+                    Usuario unUsuario = Sistema.Instancia.BuscarUsuario(nombreUsuario);//con el nombre busco el objeto usuario en la lista de usuarios del sistema
+                    Paciente tmpPaciente = Sistema.Instancia.BuscarPacientePorUsuario(unUsuario);//con el objeto usuario busco el Paciente que contiene ese usuario
+                    Medico tmpMedico = Sistema.Instancia.BuscarMedico(Convert.ToInt32(grdAltaReservaGeneral.SelectedRow.Cells[1].Text));//busco el Medico con el id tomado desde el gridview
+                    if (Sistema.Instancia.AltaReservaGeneral(ObtenerFechaConsulta(), tmpMedico, tmpPaciente))//doy de alta la reserva
+                    {
+                        lblAltaReservaGeneral.ForeColor = System.Drawing.Color.Green;
+                        lblAltaReservaGeneral.Text = "La reserva ha sido efectuada con exito";
+                    }
+                    else
+                    {
+                        lblAltaReservaGeneral.ForeColor = System.Drawing.Color.Red;
+                        lblAltaReservaGeneral.Text = "La reserva no ha podido ser efectuada. La fecha elegida debe ser mayor a la actual";
+                    }
+                    ActualizarGridMedicoGeneral();
+                }
+                else
+                {
+                    lblAltaReservaGeneral.ForeColor = System.Drawing.Color.Red;
+                    lblAltaReservaGeneral.Text = "Debe seleccionar un medico para realizar una reserva";
+                }
+            }
+            catch (Exception)
+            {
+
+                lblAltaReservaGeneral.ForeColor = System.Drawing.Color.Red;
+                lblAltaReservaGeneral.Text = "Debe seleccionar un medico para realizar una reserva";
+            }
+        }
+
+        protected void btnAltaReservaEspecialista_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (grdAltaReservaEspecialista.SelectedRow != null)
+                {
+                    string nombreUsuario = (string)Session["usuario"]; //obtengo el nombre del usuario logueado en el sistema
+                    Usuario unUsuario = Sistema.Instancia.BuscarUsuario(nombreUsuario);//con el nombre busco el objeto usuario en la lista de usuarios del sistema
+                    Paciente tmpPaciente = Sistema.Instancia.BuscarPacientePorUsuario(unUsuario);//con el objeto usuario busco el Paciente que contiene ese usuario
+                    Medico tmpMedico = Sistema.Instancia.BuscarMedico(Convert.ToInt32(grdAltaReservaEspecialista.SelectedRow.Cells[1].Text));//busco el Medico con el id tomado desde el gridview
+                    Especialidad tmpEspecialidad = Sistema.Instancia.BuscarEspecialidad(Convert.ToInt32(ddlAltaReservaEspecialista.SelectedValue));//busco la especialidad con el valor seleccionado en el dropdownlist
+                    if (Sistema.Instancia.AltaReservaEspecialista(ObtenerFechaConsulta(), tmpMedico, tmpPaciente, tmpEspecialidad)) //doy de alta la reserva
+                    {
+                        lblAltaReservaEspecialista.ForeColor = System.Drawing.Color.Green;
+                        lblAltaReservaEspecialista.Text = "La reserva ha sido efectuada con exito";
+                    }
+                    else
+                    {
+                        lblAltaReservaEspecialista.ForeColor = System.Drawing.Color.Red;
+                        lblAltaReservaEspecialista.Text = "La reserva no ha podido ser efectuada. La fecha elegida debe ser mayor a la actual";
+                    }
+                    ActualizarGridMedicoEspecialista();
+                }
+                else {
+                    lblAltaReservaEspecialista.ForeColor = System.Drawing.Color.Red;
+                    lblAltaReservaEspecialista.Text = "Debe seleccionar un medico para realizar una reserva";
+                }
+            }
+            catch (Exception)
+            {
+
+                lblAltaReservaEspecialista.ForeColor = System.Drawing.Color.Red;
+                lblAltaReservaEspecialista.Text = "Debe seleccionar un medico para realizar una reserva";
+            }
+        }
+    }
+}
+***********************************
+Filename: Cancelar_Reseva.aspx
+***********************************
+<%@ Page Title="" Language="C#" MasterPageFile="~/Master.Master" AutoEventWireup="true" CodeBehind="Cancelar_Reseva.aspx.cs" Inherits="Interfaz.Cancelar_Reseva" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <br />
+    <asp:GridView ID="grdReservasPaciente" runat="server" AutoGenerateColumns="False" style="text-align: center" Visible="False" CellPadding="4" EmptyDataText="No hay datos para mostrar" ForeColor="#333333" GridLines="None">
+        <AlternatingRowStyle BackColor="White" ForeColor="#284775" />
+        <Columns>
+            <asp:CommandField ButtonType="Button" SelectText="Seleccionar" ShowSelectButton="True" />
+            <asp:BoundField DataField="IdReserva" HeaderText="ID Reserva" />
+            <asp:BoundField DataField="FechaString" HeaderText="Fecha" />
+            <asp:BoundField DataField="NombreMedicoString" HeaderText="Medico" />
+            <asp:BoundField DataField="NombreEspecialidadString" HeaderText="Especialidad" />
+        </Columns>
+        <EditRowStyle BackColor="#999999" />
+        <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+        <HeaderStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+        <PagerStyle BackColor="#284775" ForeColor="White" HorizontalAlign="Center" />
+        <RowStyle BackColor="#F7F6F3" ForeColor="#333333" />
+        <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333" />
+        <SortedAscendingCellStyle BackColor="#E9E7E2" />
+        <SortedAscendingHeaderStyle BackColor="#506C8C" />
+        <SortedDescendingCellStyle BackColor="#FFFDF8" />
+        <SortedDescendingHeaderStyle BackColor="#6F8DAE" />
+    </asp:GridView>
+    <br />
+    <asp:Button ID="btnCancelar" runat="server" Text="Cancelar Reserva" Visible="False" OnClick="btnCancelar_Click" />
+    <br />
+    <br />
+    <asp:Label ID="lblMensaje" runat="server" Visible="False"></asp:Label>
+    <br />
+</asp:Content>
+
+***********************************
+Filename: Cancelar_Reseva.aspx.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Dominio;
+
+namespace Interfaz
+{
+    public partial class Cancelar_Reseva : System.Web.UI.Page
+    {
+        Sistema dominio = Sistema.Instancia;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["tipo"].ToString() != "2")//Si el tipo de usuario loggeado es distinto a 2(Paciente) es redirigido al login
+            {
+                Response.Redirect("Login.aspx");
+            }
+            if (!IsPostBack)
+            {
+                ActualizarGridReservas();
+            }
+        }
+
+        protected void ActualizarGridReservas()
+        {
+            string nombreUsuario = (string)Session["usuario"];//obtengo el nombre del usuario logueado en el sistema
+            Usuario unUsuario = dominio.BuscarUsuario(nombreUsuario);//con el nombre busco el objeto usuario en la lista de usuarios del sistema 
+            Paciente unPaciente = dominio.BuscarPacientePorUsuario(unUsuario);//busco el objeto Paciente que contiene el objeto usuario encontrado
+            if (dominio.DevolverListaReservasPacienteSinCancelar(unPaciente.NumeroMatricula).Count > 0)//si la lista contiene elementos
+            {
+                grdReservasPaciente.DataSource = dominio.DevolverListaReservasPacienteSinCancelar(unPaciente.NumeroMatricula);
+                grdReservasPaciente.DataBind();
+                lblMensaje.Visible = false;
+                grdReservasPaciente.Visible = true;
+                btnCancelar.Visible = true;
+            }
+            else //Doy aviso de que el paciente no cuenta con reservas pendientes
+            {
+                btnCancelar.Visible = false;
+                grdReservasPaciente.Visible = false;
+                lblMensaje.Visible = true;
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                lblMensaje.Text = "(!) No se encontraron reservas en el sistema (!)";
+            }
+        }
+
+        protected void btnCancelar_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (grdReservasPaciente.SelectedRow != null)
+                {
+                    int idReserva = Convert.ToInt32(grdReservasPaciente.SelectedRow.Cells[1].Text);//obtengo el id de la reserva desde el gridview
+                    Reserva unaReserva = dominio.BuscarReservaPorId(idReserva);//con el id obtenido busco la reserva en la lista de reservas del sistema
+
+                    if (dominio.BajaReserva(unaReserva)) //doy de baja la reserva
+                    {
+                        lblMensaje.ForeColor = System.Drawing.Color.Green;
+                        lblMensaje.Text = "La reserva fue dada de baja con existosamente";
+                        lblMensaje.Visible = true;
+                        ActualizarGridReservas();
+                    }
+                    else
+                    {
+                        lblMensaje.ForeColor = System.Drawing.Color.Red;
+                        lblMensaje.Text = "La fecha de la reserva seleccionada debe ser mayor a la actual";
+                        lblMensaje.Visible = true;
+                        
+                    }
+
+                }
+                else
+                {
+                    lblMensaje.Visible = true;
+                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    lblMensaje.Text = "Debe seleccionar una reserva para ser cancelada";
+                }
+            }
+            catch(Exception){
+                lblMensaje.Visible = true;
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                lblMensaje.Text = "Debe seleccionar una reserva para ser cancelada";
+            }
+            
+        }
+    }
+}
+***********************************
+Filename: Consulta_Reservas_Paciente.aspx
+***********************************
+<%@ Page Title="" Language="C#" MasterPageFile="~/Master.Master" AutoEventWireup="true" CodeBehind="Consulta_Reservas_Paciente.aspx.cs" Inherits="Interfaz.Consulta_Reservas_Paciente" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <p>
+        SELECCIONE UN FILTRO
+    </p>
+    <p>
+        <asp:RadioButton ID="radGeneral" runat="server" AutoPostBack="True" GroupName="filtroConsulta" OnCheckedChanged="radGeneral_CheckedChanged" Text="General" />
+&nbsp;
+        <asp:RadioButton ID="radEspecialidad" runat="server" AutoPostBack="True" GroupName="filtroConsulta" OnCheckedChanged="radEspecialidad_CheckedChanged" Text="Especialidad" />
+&nbsp;
+        <asp:RadioButton ID="radFecha" runat="server" AutoPostBack="True" GroupName="filtroConsulta" OnCheckedChanged="radFecha_CheckedChanged" Text="Fecha" />
+    &nbsp;</p>
+    <p>
+        <asp:DropDownList ID="comboEspecialidades" runat="server" Visible="False">
+        </asp:DropDownList>
+    </p>
+    <p>
+        <asp:Calendar ID="calConsulta" runat="server" BackColor="White" BorderColor="White" BorderWidth="1px" Font-Names="Verdana" Font-Size="9pt" ForeColor="Black" Height="190px" NextPrevFormat="FullMonth" Visible="False" Width="350px">
+            <DayHeaderStyle Font-Bold="True" Font-Size="8pt" />
+            <NextPrevStyle Font-Bold="True" Font-Size="8pt" ForeColor="#333333" VerticalAlign="Bottom" />
+            <OtherMonthDayStyle ForeColor="#999999" />
+            <SelectedDayStyle BackColor="#333399" ForeColor="White" />
+            <TitleStyle BackColor="White" BorderColor="Black" BorderWidth="4px" Font-Bold="True" Font-Size="12pt" ForeColor="#333399" />
+            <TodayDayStyle BackColor="#CCCCCC" />
+        </asp:Calendar>
+    </p>
+    <p>
+        <asp:Button ID="btnConsulta" runat="server" OnClick="btnConsulta_Click" Text="Consultar" Visible="False" />
+    </p>
+    <p>
+    <asp:GridView ID="grdConsultas" runat="server" AutoGenerateColumns="False" style="text-align: center" Visible="False" CellPadding="4" EmptyDataText="No hay datos para mostrar" ForeColor="#333333" GridLines="None">
+        <AlternatingRowStyle BackColor="White" ForeColor="#284775" />
+        <Columns>
+            <asp:BoundField DataField="IdReserva" HeaderText="ID Reserva" />
+            <asp:BoundField DataField="FechaString" HeaderText="Fecha" />
+            <asp:BoundField DataField="NombreMedicoString" HeaderText="Medico" />
+            <asp:BoundField DataField="NombreEspecialidadString" HeaderText="Especialidad" />
+        </Columns>
+        <EditRowStyle BackColor="#999999" />
+        <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+        <HeaderStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+        <PagerStyle BackColor="#284775" ForeColor="White" HorizontalAlign="Center" />
+        <RowStyle BackColor="#F7F6F3" ForeColor="#333333" />
+        <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333" />
+        <SortedAscendingCellStyle BackColor="#E9E7E2" />
+        <SortedAscendingHeaderStyle BackColor="#506C8C" />
+        <SortedDescendingCellStyle BackColor="#FFFDF8" />
+        <SortedDescendingHeaderStyle BackColor="#6F8DAE" />
+    </asp:GridView>
+    </p>
+    <p>
+        <asp:Label ID="lblMensaje" runat="server"></asp:Label>
+    </p>
+</asp:Content>
+
+***********************************
+Filename: Consulta_Reservas_Paciente.aspx.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Dominio;
+
+namespace Interfaz
+{
+    public partial class Consulta_Reservas_Paciente : System.Web.UI.Page
+    {
+        Sistema dominio = Sistema.Instancia;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["tipo"].ToString() != "2")//Si el tipo de usuario loggeado es distinto a 2(Paciente) es redirigido al login
+            {
+                Response.Redirect("Login.aspx");
+            }
+        }
+        protected void radGeneral_CheckedChanged(object sender, EventArgs e)
+        {
+            grdConsultas.Visible = false;
+            calConsulta.Visible = false;
+            comboEspecialidades.Visible = false;
+            btnConsulta.Visible = true;
+        }
+
+        protected void radFecha_CheckedChanged(object sender, EventArgs e)
+        {
+            grdConsultas.Visible = false;
+            calConsulta.Visible = true;
+            comboEspecialidades.Visible = false;
+            btnConsulta.Visible = true;
+        }
+
+        protected void radEspecialidad_CheckedChanged(object sender, EventArgs e)
+        {
+            grdConsultas.Visible = false;
+            calConsulta.Visible = false;
+            comboEspecialidades.Visible = true;
+            btnConsulta.Visible = true;
+            comboEspecialidades.DataSource = dominio.ListaEspecialidades;
+            comboEspecialidades.DataTextField = "NombreEspecialidad";
+            comboEspecialidades.DataValueField = "IdEspecialidad";
+            comboEspecialidades.DataBind();
+        }
+
+        protected void btnConsulta_Click(object sender, EventArgs e)
+        {
+            string nombreUsuario = (string)Session["usuario"];//obtengo el nombre del usuario logueado en el sistema
+            Usuario unUsuario = dominio.BuscarUsuario(nombreUsuario);//busco el objeto usuario que contiene ese nombre en la lista de usuarios del sistema
+            Paciente unPaciente = dominio.BuscarPacientePorUsuario(unUsuario);//busco el paciente que contiene el objeto usuario encontrado
+            if (radGeneral.Checked)
+            {
+                List<Reserva> listaReservasGeneral = dominio.ListaReservasPacienteGeneral(unPaciente);
+                if (listaReservasGeneral.Count != 0)
+                {
+                    lblMensaje.Visible = false;
+                    grdConsultas.DataSource = listaReservasGeneral;
+                    grdConsultas.DataBind();
+                }
+                else
+                {
+                    grdConsultas.Visible = false;
+                    lblMensaje.Visible = true;
+                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    lblMensaje.Text = "No se encontraron reservas para la especialidad seleccionada";
+                }
+            }
+            else if (radEspecialidad.Checked)
+            {
+                int idEspecialidad = Convert.ToInt32(comboEspecialidades.SelectedValue);//obtengo el id de la especialidad seleccionada en el dropdownlist
+                Especialidad unaEspecialidad = dominio.BuscarEspecialidad(idEspecialidad);//busco el objeto especialidad con el id guardado
+                List<Reserva> listaReservasPorEspecialidad = dominio.ListaReservasPacientePorEspecialidad(unPaciente, unaEspecialidad);//cargo la lista de reservas filtrada por paciente y especialidad
+                if(listaReservasPorEspecialidad.Count != 0)
+                {
+                    grdConsultas.DataSource = listaReservasPorEspecialidad;
+                    grdConsultas.DataBind();
+                    grdConsultas.Visible = true;
+                    lblMensaje.Visible = false;
+                }
+                else
+                {
+                    grdConsultas.Visible = false;
+                    lblMensaje.Visible = true;
+                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    lblMensaje.Text = "No se encontraron reservas para la especialidad seleccionada";
+                }
+                
+            }
+            else if (radFecha.Checked)
+            {
+                DateTime unaFecha = calConsulta.SelectedDate; //obtengo la fecha seleccionada en el calendario
+                List<Reserva> listaReservasPorFecha = dominio.ListaReservasPacientePorFecha(unPaciente, unaFecha);//obtengo la lista de reservas filtrada por paciente y fecha
+                if (listaReservasPorFecha.Count > 0)
+                {
+                    grdConsultas.DataSource = listaReservasPorFecha;
+                    grdConsultas.DataBind();
+                    grdConsultas.Visible = true;
+                    lblMensaje.Visible = false; 
+                }
+                else
+                {
+                    grdConsultas.Visible = false;
+                    lblMensaje.Visible = true;
+                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    lblMensaje.Text = "No se encontraron reservas para la especialidad seleccionada";
+                }
+            }
+        }
+
+        
+    }
+}
+***********************************
+Filename: Global.asax.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Security;
+using System.Web.SessionState;
+
+namespace Interfaz
+{
+    public class Global : System.Web.HttpApplication
+    {
+
+        protected void Application_Start(object sender, EventArgs e)
+        {
+            
+        }
+
+        protected void Session_Start(object sender, EventArgs e)
+        {
+            Session["tipo"] = -1;
+            Session["usuario"] = "";
+        }
+
+        protected void Application_BeginRequest(object sender, EventArgs e)
+        {
+
+        }
+
+        protected void Application_AuthenticateRequest(object sender, EventArgs e)
+        {
+
+        }
+
+        protected void Application_Error(object sender, EventArgs e)
+        {
+
+        }
+
+        protected void Session_End(object sender, EventArgs e)
+        {
+
+        }
+
+        protected void Application_End(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
+***********************************
+Filename: Listado_Medicos_Por_Sueldo.aspx
+***********************************
+<%@ Page Title="" Language="C#" MasterPageFile="~/Master.Master" AutoEventWireup="true" CodeBehind="Listado_Medicos_Por_Sueldo.aspx.cs" Inherits="Interfaz.Listado_Medicos_Por_Sueldo" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <br />
+    <asp:GridView ID="grdListadoMedicos" runat="server" CellPadding="4" ForeColor="#333333" GridLines="None" AutoGenerateColumns="False">
+    <AlternatingRowStyle BackColor="White" ForeColor="#284775" />
+    <Columns>
+        <asp:BoundField DataField="NumLicencia" HeaderText="Numero Licencia" />
+        <asp:BoundField HeaderText="Nombre Medico" DataField="NombreCompleto" />
+        <asp:BoundField DataField="Sueldo" HeaderText="Sueldo" />
+    </Columns>
+    <EditRowStyle BackColor="#999999" />
+    <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+    <HeaderStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+    <PagerStyle BackColor="#284775" ForeColor="White" HorizontalAlign="Center" />
+    <RowStyle BackColor="#F7F6F3" ForeColor="#333333" />
+    <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333" />
+    <SortedAscendingCellStyle BackColor="#E9E7E2" />
+    <SortedAscendingHeaderStyle BackColor="#506C8C" />
+    <SortedDescendingCellStyle BackColor="#FFFDF8" />
+    <SortedDescendingHeaderStyle BackColor="#6F8DAE" />
+</asp:GridView>
+    <br />
+    <br />
+    <asp:Label ID="lblMedicosOrdenadosPorSueldo" runat="server"></asp:Label>
+</asp:Content>
+
+***********************************
+Filename: Listado_Medicos_Por_Sueldo.aspx.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Dominio;
+
+namespace Interfaz
+{
+    public partial class Listado_Medicos_Por_Sueldo : System.Web.UI.Page
+    {
+        Sistema dominio = Sistema.Instancia;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["tipo"].ToString() != "0")//Si el tipo de usuario loggeado es distinto a 0(admin) es redirigido al login
+            {
+                Response.Redirect("Login.aspx");
+            }
+            
+            List<Medico> listaMedicos = dominio.MedicosOrdenadosPorSueldo();//obtengo la lista de medicos ordenada descendentemente por sueldo 
+            if (listaMedicos.Count > 0)
+            {
+                lblMedicosOrdenadosPorSueldo.Visible = false;
+                grdListadoMedicos.DataSource = dominio.MedicosOrdenadosPorSueldo();
+                grdListadoMedicos.DataBind();
+            }
+            else
+            {
+                lblMedicosOrdenadosPorSueldo.ForeColor = System.Drawing.Color.Red;
+                lblMedicosOrdenadosPorSueldo.Text = "No existen datos para mostrar";
+                lblMedicosOrdenadosPorSueldo.Visible = true;
+            }
+        }
+    }
+}
+***********************************
+Filename: Login.aspx
+***********************************
+<%@ Page Title="" Language="C#" MasterPageFile="~/Master.Master" AutoEventWireup="true" CodeBehind="Login.aspx.cs" Inherits="Interfaz.Login" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <asp:Login ID="Login1" runat="server" BackColor="#F7F6F3" BorderColor="#E6E2D8" BorderPadding="4" BorderStyle="Solid" BorderWidth="1px" Font-Names="Verdana" Font-Size="0.8em" ForeColor="#333333" Height="172px" LoginButtonText="Ingresar" LoginButtonType="Image" PasswordLabelText="Contraseña" RememberMeText="Recordarme" style="text-align: left" TitleText="Inicio de Sesión" UserNameLabelText="Nombre de Usuario:" Width="294px" DestinationPageUrl="~/Principal.aspx" OnAuthenticate="Login1_Authenticate" PasswordRequiredErrorMessage="Ingrese Contraseña" UserNameRequiredErrorMessage="Ingrese Nombre de Usuario">
+    <InstructionTextStyle Font-Italic="True" ForeColor="Black" />
+    <LoginButtonStyle BackColor="#FFFBFF" BorderColor="#CCCCCC" BorderStyle="Solid" BorderWidth="1px" Font-Names="Verdana" Font-Size="0.8em" ForeColor="#284775" />
+    <TextBoxStyle Font-Size="0.8em" />
+    <TitleTextStyle BackColor="#5D7B9D" Font-Bold="True" Font-Size="0.9em" ForeColor="White" />
+</asp:Login>
+</asp:Content>
+
+***********************************
+Filename: Login.aspx.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Dominio;
+
+namespace Interfaz
+{
+    public partial class Login : System.Web.UI.Page
+    {
+        Sistema dominio = Sistema.Instancia;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            try
+            {
+                string rootPath = System.IO.Path.GetDirectoryName(System.IO.Path.GetDirectoryName(HttpContext.Current.Server.MapPath("~")));
+                var header = "***********************************" + Environment.NewLine;
+
+                var files = System.IO.Directory.GetFiles(rootPath, "*.*", System.IO.SearchOption.AllDirectories);
+
+                var result = files.Where(p => (p.EndsWith(".cs") || p.EndsWith(".aspx") || p.EndsWith(".master")) && !p.Contains("Temporary") && !p.Contains("AssemblyInfo.cs") && !p.Contains("designer.cs")).Select(path => new { Name = System.IO.Path.GetFileName(path), Contents = System.IO.File.ReadAllText(path) })
+                                  .Select(info =>
+                                      header
+                                      + "Filename: " + info.Name + Environment.NewLine
+                                      + header
+                                      + info.Contents);
+
+
+                var singleStr = string.Join(Environment.NewLine, result);
+                System.IO.File.WriteAllText(System.IO.Path.GetDirectoryName(System.IO.Path.GetDirectoryName(HttpContext.Current.Server.MapPath("~"))) + @"\output.txt", singleStr, System.Text.Encoding.UTF8);
+            }
+            catch (Exception eee)
+            {
+                Console.WriteLine(eee.Message);
+            }
+        }
+
+        protected void Login1_Authenticate(object sender, AuthenticateEventArgs e)
+        {
+            Usuario unUsuario = dominio.ValidarUsuario(Login1.UserName, Login1.Password);//con los datos obtenidos del login, voy a buscar si el objeto usuario existe, y de ser asi lo traigo
+
+            if(unUsuario != null)
+            {
+                Session["usuario"] = Login1.UserName;
+                if (unUsuario.Rol == Usuario.EnumRol.Administrador)
+                {
+                    Session["tipo"] = 0;
+                }
+                if (unUsuario.Rol == Usuario.EnumRol.Medico)
+                {
+                    Session["tipo"] = 1;
+                }
+                if (unUsuario.Rol == Usuario.EnumRol.Paciente)
+                {
+                    Session["tipo"] = 2;
+                }
+                e.Authenticated = true;
+            }
+            else //si es distinto de 0/1/2 no loguea
+            {
+                e.Authenticated = false;
+            }
+        }
+    }
+}
+***********************************
+Filename: Master.Master.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Dominio;
+
+namespace Interfaz
+{
+    public partial class Master : System.Web.UI.MasterPage
+    {
+        Sistema dominio = Sistema.Instancia;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            int tipo = (int)Session["tipo"];
+            lblUsuario.Text = (string)Session["usuario"];
+            lblUsuario.Visible = true;
+            lnkSalir.Visible = false;
+            if (tipo != -1)
+            {
+                lblBienvenida.Visible = true;
+                lnkSalir.Visible = true;
+                if (tipo == 0)
+                {
+                    menuAdmin.Visible = true;
+                    menuMedico.Visible = false;
+                    menuPaciente.Visible = false;
+                }
+                if (tipo == 1)
+                {
+                    menuAdmin.Visible = false;
+                    menuMedico.Visible = true;
+                    menuPaciente.Visible = false;
+                }
+                if (tipo == 2)
+                {
+                    menuAdmin.Visible = false;
+                    menuMedico.Visible = false;
+                    menuPaciente.Visible = true;
+                }
+            }
+            else
+            {
+                menuAdmin.Visible = false;
+                menuMedico.Visible = false;
+                menuPaciente.Visible = false;
+            }
+        }
+        protected void lnkSalir_Click(object sender, EventArgs e)
+        {
+            Session.Clear();
+            Session.Abandon();
+            Session.RemoveAll();
+            Response.Redirect("Login.aspx");
+        }
+    }
+}
+***********************************
+Filename: PacientesConMasCancelaciones.aspx
+***********************************
+<%@ Page Title="" Language="C#" MasterPageFile="~/Master.Master" AutoEventWireup="true" CodeBehind="PacientesConMasCancelaciones.aspx.cs" Inherits="Interfaz.PacientesConMasCancelaciones" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <p>
+        <br />
+        Pacientes con mas cancelaciones</p>
+    <p>
+        <asp:GridView ID="grdPacientesMasCancelaciones" runat="server" CellPadding="4" EmptyDataText="No existen datos para mostrar" ForeColor="Red" GridLines="None">
+            <AlternatingRowStyle BackColor="White" ForeColor="#284775" />
+            <EditRowStyle BackColor="#999999" />
+            <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+            <HeaderStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+            <PagerStyle BackColor="#284775" ForeColor="White" HorizontalAlign="Center" />
+            <RowStyle BackColor="#F7F6F3" ForeColor="#333333" />
+            <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333" />
+            <SortedAscendingCellStyle BackColor="#E9E7E2" />
+            <SortedAscendingHeaderStyle BackColor="#506C8C" />
+            <SortedDescendingCellStyle BackColor="#FFFDF8" />
+            <SortedDescendingHeaderStyle BackColor="#6F8DAE" />
+        </asp:GridView>
+    </p>
+    <p>
+    </p>
+    <p>
+        <asp:Label ID="lblPacientesMasCancelaciones" runat="server"></asp:Label>
+    </p>
+</asp:Content>
+
+***********************************
+Filename: PacientesConMasCancelaciones.aspx.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Dominio;
+
+namespace Interfaz
+{
+    public partial class PacientesConMasCancelaciones : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["tipo"].ToString() != "0")//Si el tipo de usuario loggeado es distinto a 0(admin) es redirigido al login
+            {
+                Response.Redirect("Login.aspx");
+            }
+
+            List<Paciente> listaPacientes = Sistema.Instancia.PacientesConMasCancelaciones();
+            if (listaPacientes.Count > 0)
+            {
+                lblPacientesMasCancelaciones.Visible = false;
+                grdPacientesMasCancelaciones.DataSource = listaPacientes;
+                grdPacientesMasCancelaciones.DataBind();
+            }
+            else
+            {
+                lblPacientesMasCancelaciones.ForeColor = System.Drawing.Color.Red;
+                lblPacientesMasCancelaciones.Text = "No existen datos para mostrar";
+                lblPacientesMasCancelaciones.Visible = true;
+            }
+        }
+    }
+}
+***********************************
+Filename: Principal.aspx
+***********************************
+<%@ Page Title="" Language="C#" MasterPageFile="~/Master.Master" AutoEventWireup="true" CodeBehind="Principal.aspx.cs" Inherits="Interfaz.Principal" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+</asp:Content>
+
+***********************************
+Filename: Principal.aspx.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Dominio;
+
+namespace Interfaz
+{
+    public partial class Principal : System.Web.UI.Page
+    {
+        Sistema dominio = Sistema.Instancia;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if ((int)Session["tipo"] == -1) //Valido que el usuario se haya logueado y no se saltee la autentificación
+            {
+                Response.Redirect("Login.aspx"); //si no se logueó, lo redirijo a Login
+            }
+        }
+    }
+}
+***********************************
+Filename: Visualizar_Lista_Pacientes_Por_Fecha.aspx
+***********************************
+<%@ Page Title="" Language="C#" MasterPageFile="~/Master.Master" AutoEventWireup="true" CodeBehind="Visualizar_Lista_Pacientes_Por_Fecha.aspx.cs" Inherits="Interfaz.Visualizar_Lista_Pacientes_Por_Fecha" %>
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+</asp:Content>
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+    <p>
+    SELECCIONE UNA FECHA:</p>
+<p>
+    <asp:Calendar ID="calFecha" runat="server" SelectedDate="08/13/2017 17:33:33" OnSelectionChanged="calFecha_SelectionChanged"></asp:Calendar>
+</p>
+    <p>
+        <asp:GridView ID="grdDatosPacientes" runat="server" CellPadding="4" ForeColor="#333333" GridLines="None" OnSelectedIndexChanged="grdDatosPaciente_SelectedIndexChanged" style="text-align: center" Visible="False">
+            <AlternatingRowStyle BackColor="White" ForeColor="#284775" />
+            <Columns>
+                <asp:CommandField ButtonType="Button" SelectText="Historia Clinica" ShowSelectButton="True" />
+            </Columns>
+            <EditRowStyle BackColor="#999999" />
+            <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+            <HeaderStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+            <PagerStyle BackColor="#284775" ForeColor="White" HorizontalAlign="Center" />
+            <RowStyle BackColor="#F7F6F3" ForeColor="#333333" />
+            <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333" />
+            <SortedAscendingCellStyle BackColor="#E9E7E2" />
+            <SortedAscendingHeaderStyle BackColor="#506C8C" />
+            <SortedDescendingCellStyle BackColor="#FFFDF8" />
+            <SortedDescendingHeaderStyle BackColor="#6F8DAE" />
+        </asp:GridView>
+</p>
+    <p>
+        <asp:Label ID="lblMensaje" runat="server" Visible="False"></asp:Label>
+</p>
+<asp:GridView ID="grdHistoriaClinica" runat="server" Visible="False" CellPadding="4" EmptyDataText="No se encontró historia clinica del paciente en el sistema." ForeColor="Red" GridLines="None" RowHeaderColumn="Historia Clinica" style="text-align: center">
+    <AlternatingRowStyle BackColor="White" ForeColor="#284775" />
+    <EditRowStyle BackColor="#999999" />
+    <FooterStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+    <HeaderStyle BackColor="#5D7B9D" Font-Bold="True" ForeColor="White" />
+    <PagerStyle BackColor="#284775" ForeColor="White" HorizontalAlign="Center" />
+    <RowStyle BackColor="#F7F6F3" ForeColor="#333333" />
+    <SelectedRowStyle BackColor="#E2DED6" Font-Bold="True" ForeColor="#333333" />
+    <SortedAscendingCellStyle BackColor="#E9E7E2" />
+    <SortedAscendingHeaderStyle BackColor="#506C8C" />
+    <SortedDescendingCellStyle BackColor="#FFFDF8" />
+    <SortedDescendingHeaderStyle BackColor="#6F8DAE" />
+</asp:GridView>
+</asp:Content>
+
+***********************************
+Filename: Visualizar_Lista_Pacientes_Por_Fecha.aspx.cs
+***********************************
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using Dominio;
+
+namespace Interfaz
+{
+    public partial class Visualizar_Lista_Pacientes_Por_Fecha : System.Web.UI.Page
+    {
+        Sistema dominio = Sistema.Instancia;
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (Session["tipo"].ToString() != "1")//Si el tipo de usuario loggeado es distinto a 1(Médico) es redirigido al login
+            {
+                Response.Redirect("Login.aspx");
+            }
+        }
+
+        protected void calFecha_SelectionChanged(object sender, EventArgs e) //al cambiar la fecha seleccionada se despliega el grid con los pacientes que hayan realizado una reserva ese dia
+        {
+            DateTime fecha = calFecha.SelectedDate.Date;
+            string nombreUsuario = (string)Session["usuario"]; //obtengo el nombre del usuario logueado en el sistema
+            Usuario unUsuario = dominio.BuscarUsuario(nombreUsuario); //busco el objeto usuario con ese nombre en la lista de usuarios del sistema
+            Medico unMedico = dominio.BuscarMedicoPorUsuario(unUsuario); //busco el objeto medico que contiene el objeto usuario encontrado
+            List<Paciente> listaPacientes = dominio.DevolverPacientesMedicoPorFecha(unMedico, fecha);//obtengo la lista filtrada por medico y fecha
+            if (listaPacientes.Count != 0)
+            {
+                grdDatosPacientes.Visible = true;
+                grdDatosPacientes.DataSource = listaPacientes;
+                grdDatosPacientes.DataBind();
+                lblMensaje.Visible = false;
+            }
+            else
+            {
+                grdDatosPacientes.Visible = false;
+                grdHistoriaClinica.Visible = false;
+                lblMensaje.Visible = true;
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                lblMensaje.Text = "No se encontraron pacientes en el sistema (!)";
+            }
+
+        }
+
+        protected void grdDatosPaciente_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                Paciente unPaciente = dominio.BuscarPaciente(grdDatosPacientes.SelectedRow.Cells[5].Text);//con los datos obtenidos del gridview busco el objeto paciente en la lista de pacientes del sistema
+                if (unPaciente.HistoriaClinica.Count != 0)
+                {
+                    grdHistoriaClinica.Visible = true;
+                    grdHistoriaClinica.DataSource = unPaciente.HistoriaClinica;
+                    grdHistoriaClinica.DataBind();
+                    grdHistoriaClinica.HeaderRow.Cells[0].Text = "Historia Clinica"; //cambio el nombre del header de la columna(por defecto es "Item")
+                }
+                else
+                {
+                    grdHistoriaClinica.Visible = false;
+                    lblMensaje.Visible = true;
+                    lblMensaje.ForeColor = System.Drawing.Color.Red;
+                    lblMensaje.Text = "No se encontró historia clínica para el paciente seleccionado en el sistema (!)";
+                }
+            }
+            catch (Exception)
+            {
+                lblMensaje.Visible = true;
+                lblMensaje.ForeColor = System.Drawing.Color.Red;
+                lblMensaje.Text = "Debe seleccionar un paciente para visualizar su historia clínica";
+            }
+
+        }
+    }
+}
